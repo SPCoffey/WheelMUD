@@ -10,6 +10,7 @@
 
 namespace WheelMUD.Actions
 {
+    using System;
     using System.Collections.Generic;
     using System.Text;
     using WheelMUD.Core;
@@ -18,13 +19,13 @@ namespace WheelMUD.Actions
 
     /// <summary>A command that allows a player to look at something.</summary>
     [ExportGameAction]
-    [ActionPrimaryAlias("examine", CommandCategory.Inform)]
-    [ActionAlias("ex", CommandCategory.Inform)]
-    [ActionAlias("exa", CommandCategory.Inform)]
-    [ActionAlias("info", CommandCategory.Inform)]
-    [ActionDescription("Examine something closely.")]
-    [ActionSecurity(SecurityRole.player)]
-    public class Examine : GameAction
+    [ActionPrimaryAlias("adminexamine", CommandCategory.Inform)]
+    [ActionAlias("adex", CommandCategory.Inform)]
+    [ActionAlias("admexa", CommandCategory.Inform)]
+    [ActionAlias("admininfo", CommandCategory.Inform)]
+    [ActionDescription("Examine something VERY closely.")]
+    [ActionSecurity(SecurityRole.fullAdmin)]
+    public class AdminExamine : GameAction
     {
         /// <summary>List of reusable guards which must be passed before action requests may proceed to execution.</summary>
         private static readonly List<CommonGuards> ActionGuards = new List<CommonGuards>
@@ -51,7 +52,25 @@ namespace WheelMUD.Actions
             // Unique case. Use 'here' to list the contents of the room.
             if (searchString == "here")
             {
-                sender.Write(this.ListRoomItems(parent));
+                var sb = new StringBuilder();
+
+                sb.Append("ID: " + parent.Id);
+                sb.Append(Environment.NewLine);
+
+                foreach (Behavior behavior in parent.Behaviors.AllBehaviors)
+                {
+                    sb.Append("Behavior: " + behavior.GetType().Name);
+                    sb.Append(Environment.NewLine);
+                }
+
+                foreach (Thing child in parent.Children)
+                {
+                    sb.Append("Child: " + child.Name);
+                    sb.Append(Environment.NewLine);
+                }
+
+                sender.Write(sb.ToString().Trim());
+
                 return;
             }
 
@@ -59,7 +78,24 @@ namespace WheelMUD.Actions
             if (thing != null)
             {
                 // @@@ TODO: Send a SensoryEvent?
-                sender.Write(thing.Description);
+                var sb = new StringBuilder();
+
+                sb.Append("ID: " + thing.Id);
+                sb.Append(Environment.NewLine);
+
+                foreach (Behavior behavior in thing.Behaviors.AllBehaviors)
+                {
+                    sb.Append("Behavior: " + behavior.GetType().Name);
+                    sb.Append(Environment.NewLine);
+                }
+
+                foreach (Thing child in thing.Children)
+                {
+                    sb.Append("Child: " + child.Name);
+                    sb.Append(Environment.NewLine);
+                }
+
+                sender.Write(sb.ToString().Trim());
             }
             else
             {

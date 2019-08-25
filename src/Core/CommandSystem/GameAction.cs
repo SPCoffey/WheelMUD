@@ -139,5 +139,28 @@ namespace WheelMUD.Actions
 
             return null;
         }
+
+        /// <summary>Find a target using a search string.</summary>
+        /// <param name="sender">The sender of this target query.</param>
+        /// <param name="searchString">The string to search for.</param>
+        /// <returns>The found target, or null if non.</returns>
+        protected Thing FindTarget(Thing sender, string searchString)
+        {
+            if (searchString == "self" || searchString == "me" || searchString == "myself")
+            {
+                return sender;
+            }
+
+            // First check the place where the sender is located (like a room) for the target,
+            // and if not found, search the sender's children (like inventory) for the target.
+            Thing thing = sender.Parent.FindChild(searchString) ?? sender.FindChild(searchString);
+            if (thing != null)
+            {
+                // @@@ TODO: Send a SensoryEvent?
+                return thing;
+            }
+
+            return null;
+        }
     }
 }

@@ -213,6 +213,7 @@ namespace WheelMUD.Core.Events
             {
                 // If anything (like one of the thing's Behaviors) is subscribed to this event, send it there.
                 Thing currentEventTarget = eventTargetQueue.Dequeue();
+
                 var handler = handlerSelector(currentEventTarget.Eventing);
                 if (handler != null)
                 {

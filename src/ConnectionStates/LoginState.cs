@@ -47,10 +47,24 @@ namespace WheelMUD.ConnectionStates
                     else
                     {
                         var characterId = this.Session.User.PlayerCharacterIds[0];
-                        this.Session.Thing = DocumentRepository<Thing>.Load(characterId);
-                        this.Session.Thing.Behaviors.SetParent(this.Session.Thing);
-                        this.Session.Thing.Behaviors.FindFirst<PlayerBehavior>().LogIn(this.Session);
+
                         this.Session.AuthenticateSession();
+
+                        Thing existingPlayer = PlayerManager.Instance.FindPlayerById(characterId);
+                        if (existingPlayer != null)
+                        {
+                            Console.WriteLine("Existing Player!");
+                            this.Session.Thing = existingPlayer;
+                            this.Session.Thing.Behaviors.FindFirst<PlayerBehavior>().LogIn(this.Session);
+                        }
+                        else
+                        {
+                            this.Session.Thing = DocumentRepository<Thing>.Load(characterId);
+                            this.Session.Thing.Behaviors.SetParent(this.Session.Thing);
+                            this.Session.Thing.Behaviors.FindFirst<PlayerBehavior>().LogIn(this.Session);
+                            PlayerManager.Instance.AddPlayer(this.Session.Thing);
+                        }
+
                         this.Session.State = new PlayingState(this.Session);
                     }
                 }

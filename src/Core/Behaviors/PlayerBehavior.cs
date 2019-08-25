@@ -138,6 +138,7 @@ namespace WheelMUD.Core
         /// <summary>Releases unmanaged and, optionally, managed resources.</summary>
         public void Dispose()
         {
+            SessionId = null;
             PlayerManager.GlobalPlayerLogInEvent -= this.ProcessPlayerLogInEvent;
             PlayerManager.GlobalPlayerLogOutEvent -= this.ProcessPlayerLogOutEvent;
             if (this.EventProcessor != null)
@@ -180,6 +181,14 @@ namespace WheelMUD.Core
         {
             var player = this.Parent;
 
+            if (this.EventProcessor == null)
+            {
+                this.SessionId = session.ID;
+                player.Behaviors.FindFirst<UserControlledBehavior>().Controller = session; // Re-attach controller?
+                this.EventProcessor = new PlayerEventProcessor(this, player.Behaviors.FindFirst<SensesBehavior>(), player.Behaviors.FindFirst<UserControlledBehavior>());
+                this.EventProcessor.AttachEvents(); // Re-attach events to the player object.
+               }
+
             // If the player isn't located anywhere yet, try to drop them in the default room.
             // (Expect that even new characters may gain a starting position via custom character generation
             // flows which let the user to select a starting spawn area.)
@@ -206,7 +215,7 @@ namespace WheelMUD.Core
             // If nothing canceled this event request, carry on with the login.
             if (!e.IsCancelled)
             {
-                player.Parent = targetPlayerStartingPosition;
+                targetPlayerStartingPosition.Add(player);
 
                 DateTime universalTime = DateTime.Now.ToUniversalTime();
                 this.PlayerData.LastLogin = universalTime.ToString("s", DateTimeFormatInfo.InvariantInfo) + "Z";

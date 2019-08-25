@@ -79,6 +79,8 @@
     <Compile Include="Admin\Ban.cs" />
     <Compile Include="Admin\Boot.cs" />
     <Compile Include="Admin\Clone.cs" />
+    <Compile Include="Admin\Dig.cs" />
+    <Compile Include="Admin\AdminExamine.cs" />
     <Compile Include="Admin\GoTo.cs" />
     <Compile Include="Admin\Jail.cs" />
     <Compile Include="Admin\Control.cs" />

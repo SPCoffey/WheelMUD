@@ -15,6 +15,8 @@ namespace WheelMUD.Core
     using System.Linq;
     using WheelMUD.Core.Events;
     using WheelMUD.Interfaces;
+    using ServiceStack.OrmLite;
+    using WheelMUD.Data;
 
     /// <summary>High level manager that provides tracking and global collection of online players.</summary>
     /// <remarks>
@@ -168,7 +170,11 @@ namespace WheelMUD.Core
             lock (this.lockObject)
             {
                 PlayerBehavior playerBehavior = this.playersList.Find(p => p.Parent.Id.Equals(id));
-                return playerBehavior.Parent;
+                if (playerBehavior != null)
+                {
+                    return playerBehavior.Parent;
+                }
+                return null;
             }
         }
 
@@ -194,27 +200,27 @@ namespace WheelMUD.Core
                 // @@@ TEST: Ensure this closes the connection correctly, etc; used to be rigged 
                 //     dangerously directly through the ServerManager.
                 previousPlayer.LogOut();
-                this.RemovePlayer(previousPlayer.Parent);
             }
 
             // If this session doesn't have a player thing attached yet, load it up.  Note that
             // for situations like character creation, we might already have our Thing, so we
             // don't want to load a duplicate version of the just-created player Thing.
-            if (session.Thing == null)
-            {
-                session.Write("User was authenticated but the player character could not be loaded.");
-                session.Write("Please contact an administrator. Disconnecting.");
-                session.Connection.Disconnect();
-            }
+            //if (session.Thing == null)
+            //{
+            //    session.Write("User was authenticated but the player character could not be loaded.");
+            //    session.Write("Please contact an administrator. Disconnecting.");
+            //    session.Connection.Disconnect();
+            //}
 
             // TODO: Perhaps reset player command queue to have exactly one "look" command?
+            
         }
 
         /// <summary>Called upon session disconnect.</summary>
         /// <param name="session">The disconnected session.</param>
         public void OnSessionDisconnected(Session session)
         {
-            PlayerBehavior playerBehavior = this.playersList.Find(p => p.SessionId.Equals(session.ID));
+            PlayerBehavior playerBehavior = this.playersList.Find(p => (!string.IsNullOrEmpty(p.SessionId) && p.SessionId.Equals(session.ID)));
             if (playerBehavior != null)
             {
                 // For now we're just going to log out a player who disconnects.
@@ -247,7 +253,7 @@ namespace WheelMUD.Core
 
         /// <summary>Remove the specified player from the PlayerManager.</summary>
         /// <param name="player">The player to remove.</param>
-        private void RemovePlayer(Thing player)
+        public void RemovePlayer(Thing player)
         {
             var playerBehavior = player.Behaviors.FindFirst<PlayerBehavior>();
             if (playerBehavior != null)
@@ -259,13 +265,27 @@ namespace WheelMUD.Core
             }
         }
 
+        /// <summary>Add the specified player to the PlayerManager.</summary>
+        /// <param name="player">The player to add.</param>
+        public void AddPlayer(Thing player)
+        {
+            var playerBehavior = player.Behaviors.FindFirst<PlayerBehavior>();
+            if (playerBehavior != null)
+            {
+                lock (this.lockObject)
+                {
+                    this.playersList.Add(playerBehavior);
+                }
+            }
+        }
+
         /// <summary>Find a logged-in player by user name.</summary>
         /// <param name="userName">The user name to search for.</param>
         /// <returns>The PlayerBehavior of the user, if found, else null.</returns>
         private PlayerBehavior FindLoggedInPlayer(string userName)
         {
             // TODO: #62: Find via user name instead of player names which match this user name.
-            return this.FindPlayer(p => p.Parent.Name.Equals(userName, StringComparison.CurrentCultureIgnoreCase));
+            return this.FindPlayer(p => (p.Parent.Name.Equals(userName, StringComparison.CurrentCultureIgnoreCase) && p.SessionId != null));
         }
 
         /// <summary>Exports an instance of the PlayerManager singleton through MEF.</summary>

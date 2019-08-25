@@ -34,12 +34,14 @@ namespace WheelMUD.Actions
             CommonGuards.RequiresAtLeastOneArgument
         };
 
+        private string emoteText;
+
         /// <summary>Executes the command.</summary>
         /// <param name="actionInput">The full input specified for executing the command.</param>
         public override void Execute(ActionInput actionInput)
         {
             IController sender = actionInput.Controller;
-            string emoteString = string.Format("<*$ActiveThing.Name {0}>", actionInput.Tail);
+            string emoteString = string.Format("$ActiveThing.Name {0}", emoteText);
 
             var contextualString = new ContextualString(sender.Thing, sender.Thing.Parent)
             {
@@ -67,6 +69,7 @@ namespace WheelMUD.Actions
                 return commonFailure;
             }
 
+            this.emoteText = actionInput.Tail.Trim();
             return null;
         }
     }
