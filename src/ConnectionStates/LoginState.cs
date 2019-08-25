@@ -66,6 +66,8 @@ namespace WheelMUD.ConnectionStates
                         }
 
                         this.Session.State = new PlayingState(this.Session);
+
+                        this.Session.ExecuteAction(new ActionInput("look", Session));
                     }
                 }
                 else

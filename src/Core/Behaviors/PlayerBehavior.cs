@@ -181,13 +181,18 @@ namespace WheelMUD.Core
         {
             var player = this.Parent;
 
+            this.SessionId = session.ID;
+
+            if (player.Behaviors.FindFirst<UserControlledBehavior>() != null)
+            {
+                player.Behaviors.FindFirst<UserControlledBehavior>().Controller = session; // Re-attach controller?
+            }
+
             if (this.EventProcessor == null)
             {
-                this.SessionId = session.ID;
-                player.Behaviors.FindFirst<UserControlledBehavior>().Controller = session; // Re-attach controller?
-                this.EventProcessor = new PlayerEventProcessor(this, player.Behaviors.FindFirst<SensesBehavior>(), player.Behaviors.FindFirst<UserControlledBehavior>());
+                InitEventProcessor(player.Behaviors.FindFirst<SensesBehavior>(), player.Behaviors.FindFirst<UserControlledBehavior>());
                 this.EventProcessor.AttachEvents(); // Re-attach events to the player object.
-               }
+            }
 
             // If the player isn't located anywhere yet, try to drop them in the default room.
             // (Expect that even new characters may gain a starting position via custom character generation
@@ -288,7 +293,10 @@ namespace WheelMUD.Core
         /// <summary>Called when a parent has just been assigned to this behavior. (Refer to this.Parent)</summary>
         public override void OnAddBehavior()
         {
-            this.EventProcessor.AttachEvents();
+            if (this.EventProcessor != null)
+            {
+                this.EventProcessor.AttachEvents();
+            }
         }
 
         /// <summary>Initializes a PlayerEventProcessor for this player.</summary>

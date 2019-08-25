@@ -13,6 +13,7 @@ namespace WheelMUD.Core
     using System.Collections.Generic;
     using System.Linq;
     using WheelMUD.Interfaces;
+    using WheelMUD.Core.Events;
 
     /// <summary>A security role.</summary>
     public class Role
@@ -56,9 +57,29 @@ namespace WheelMUD.Core
             // multiple rooms, etc.)
         }
 
+        /// <summary>Called when a parent has just been assigned to this behavior. (Refer to this.Parent)</summary>
+        public override void OnAddBehavior()
+        {
+            this.Parent.Eventing.MovementEvent += LookOnMove;
+        }
+
+        private void LookOnMove(Thing root, GameEvent e)
+        {
+            // Only look if it's a new room
+            if (this.Controller != null && (PreviousRoom == null || PreviousRoom != this.Parent.Parent.Id))
+            {
+                this.Controller.ExecuteAction(new ActionInput("look", this.Controller));
+            }
+
+            PreviousRoom = this.Parent.Parent.Id;
+        }
+
         //// @@@ TODO: Clean up Roles to remove DAL-bound RoleRecords and such...?
         ///// <summary>Gets the current list of <see cref="RoleRecord"/> associated with this player.</summary>
         ////public List<RoleRecord> RoleRecords { get; private set; }
+
+        [JsonIgnore]
+        private string PreviousRoom { get; set; }
 
         /// <summary>Gets the current list of <see cref="Role"/> names associated with this user.</summary>
         [JsonIgnore]

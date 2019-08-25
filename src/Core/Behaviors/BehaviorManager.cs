@@ -74,6 +74,7 @@ namespace WheelMUD.Core
                 foreach (var behavior in this.ManagedBehaviors)
                 {
                     behavior.Parent = parent;
+                    behavior.OnAddBehavior();
                 }
             }
         }
